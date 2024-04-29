@@ -4,6 +4,7 @@
 
 VERSION="2.2"
 DEBUG=${MG_DEBUG:-0}
+FIND=${MG_FIND:-find}
 
 usage () {
     cat << EOF >&2
@@ -154,17 +155,29 @@ ID="$(id -n -u)"
 
 # Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan is
 # infinitely deep
-FIND_OPTS=""
-if [ "$DEPTH" -ne 0 ]; then
-    FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
+FIND_OPTS="-L"
+if [ "$FIND" = "find" ]; then
+    if [ "$DEPTH" -ne 0 ]; then
+        FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
+    fi
+    FIND_OPTS="$FIND_OPTS -type d"
+fi
+if [ "$FIND" = "fd" ]; then
+    FIND="fd . "
+    if [ "$DEPTH" -ne 0 ]; then
+        FIND_OPTS="$FIND_OPTS --max-depth $DEPTH"
+    fi
+    FIND_OPTS="$FIND_OPTS --type d"
 fi
 
 # Go through positional arguments (DIRs) or '.' if no argumnets are given
 for DIR in "${@:-"."}"; do
     # We *want* to expand parameters, so disable shellcheck for this error:
     # shellcheck disable=SC2086
-    find -L "$DIR" $FIND_OPTS -type d | while read -r PROJ_DIR
+    [ $DEBUG -eq 1 ] && echo "$FIND $DIR $FIND_OPTS"
+    $FIND "$DIR" $FIND_OPTS | while read -r PROJ_DIR
     do
+        [ $DEBUG -eq 1 ] && echo "checking: '$PROJ_DIR'"
         GIT_DIR="$PROJ_DIR/.git"
         GIT_CONF="$PROJ_DIR/.git/config"
         # handle submodules
