@@ -155,7 +155,7 @@ ID="$(id -n -u)"
 
 # Find all .git dirs, up to DEPTH levels deep. If DEPTH is 0, the scan is
 # infinitely deep
-FIND_OPTS="-L"
+FIND_OPTS=""
 if [ "$FIND" = "find" ]; then
     if [ "$DEPTH" -ne 0 ]; then
         FIND_OPTS="$FIND_OPTS -maxdepth $DEPTH"
@@ -163,6 +163,7 @@ if [ "$FIND" = "find" ]; then
     FIND_OPTS="$FIND_OPTS -type d"
 fi
 if [ "$FIND" = "fd" ]; then
+    FIND_OPTS="$FIND_OPTS -L"
     FIND="fd . "
     if [ "$DEPTH" -ne 0 ]; then
         FIND_OPTS="$FIND_OPTS --max-depth $DEPTH"
